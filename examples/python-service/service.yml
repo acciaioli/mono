@@ -1,0 +1,9 @@
+---
+build:
+  artifact:
+    name:  ".my-python.zip"
+    command:
+      - "zip"
+      - "-r"
+      - ".my-python.zip"
+      - "."

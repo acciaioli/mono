@@ -1,7 +1,7 @@
 ---
 build:
   artifact:
-      name:  .artifact.zip
+      name:  ".source.zip"
       command:
-        - make
-        - artifact
+        - "make"
+        - "artifact"
