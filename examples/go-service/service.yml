@@ -1,0 +1,7 @@
+---
+build:
+  artifact:
+      name:  .artifact.zip
+      command:
+        - make
+        - artifact

@@ -1,0 +1,13 @@
+service: python-service
+
+frameworkVersion: '2'
+
+provider:
+  name: aws
+  region: eu-west-1
+  runtime: python3.6
+  stage: dev
+
+functions:
+  hello:
+    handler: handler.hello
