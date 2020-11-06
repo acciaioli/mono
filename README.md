@@ -24,34 +24,43 @@ Use "mono [command] --help" for more information about a command.
 
 ## Get Started
 
+### AWS
 ```
 ▶ export AWS_REGION=my-aws-region
 ▶ export AWS_PROFILE=my-aws-profile
+▶ export MONO_ARTIFACT_BUCKET=my-aws-s3-bucket
 
 ▶ mono list
-examples/go-service
-examples/python-service
+Service: examples/python-service
+Status: ok
+Local Checksum: 29d93f3235df9a83f36c471085ba4f0b105ddec2
+Pushed Checksum: 29d93f3235df9a83f36c471085ba4f0b105ddec2
+
+Service: examples/go-service
+Status: diff
+Local Checksum: 2742f0cd2d31fb3d04dd1d14482941026de9f56d
+Pushed Checksum: 1ce479560b36cd620b659c7bafe970cc307536dd
 
 ▶ mono checksum --service=examples/python-service
 29d93f3235df9a83f36c471085ba4f0b105ddec2
 
-▶ mono checksum --service=examples/python-service --pushed --bucket=s3://my-aws-s3-bucket
+▶ mono checksum --service=examples/python-service --pushed
 
 
 ▶ mono build --service=examples/python-service
 .tmp/builds/examples/python-service/29d93f3235df9a83f36c471085ba4f0b105ddec2.zip
-                                                                                                                                                                                                            7m ⚑  
-▶ mono push --artifact=.tmp/builds/examples/python-service/29d93f3235df9a83f36c471085ba4f0b105ddec2.zip --bucket=s3://my-aws-s3-bucket  
+
+▶ mono push --artifact=.tmp/builds/examples/python-service/29d93f3235df9a83f36c471085ba4f0b105ddec2.zip  
 /examples/python-service/29d93f3235df9a83f36c471085ba4f0b105ddec2.zip
-                                                                                                                                                                                                           7m ⚑  
-▶ mono checksum --service=examples/python-service --pushed --bucket=s3://my-aws-s3-bucket                                       
+
+▶ mono checksum --service=examples/python-service --pushed
 29d93f3235df9a83f36c471085ba4f0b105ddec2
 ```
 
 ## To Do
 
-- enhance `mono list`
-- `build --updated` support (build if current checksum differs from last pushed one)
+- enhance `mono list` (prefix, contains, suffix filter)
+- `build --all` support (build if current checksum differs from last pushed one)
 - `push --all` support (push all artifacts under the builds directory)
 - github actions
 - support for unit test

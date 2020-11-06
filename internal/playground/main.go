@@ -1,12 +1,13 @@
 package main
 
-import (
-	"fmt"
-	"path/filepath"
-)
+import "fmt"
 
 func main() {
-	fmt.Println(filepath.Join("a", "bbbb", "cc", ".zip"))
+	var l []string
+
+	if l == nil {
+		fmt.Println("is nil")
+	}
 
 }
 
