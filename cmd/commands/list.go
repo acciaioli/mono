@@ -2,9 +2,10 @@ package commands
 
 import (
 	"fmt"
-	"github.com/acciaioli/mono/cmd/env"
+
 	"github.com/spf13/cobra"
 
+	"github.com/acciaioli/mono/cmd/env"
 	"github.com/acciaioli/mono/services/list"
 )
 
@@ -41,7 +42,6 @@ func List() *cobra.Command {
 	}
 	return cmd
 }
-
 
 func toString(s *string) string {
 	if s == nil {

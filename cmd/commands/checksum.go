@@ -33,7 +33,7 @@ func Checksum() *cobra.Command {
 				return err
 			}
 
-			chsum, err := func() (*string, error){
+			chsum, err := func() (*string, error) {
 				if pushed {
 					return checksum.GetLatestChecksum(service, bucket)
 				}

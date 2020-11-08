@@ -6,7 +6,7 @@ default: fix lint test
 
 fix:
 	@ echo ">> fixing source code"
-	@ gofmt -s -l -w cmd
+	@ gofmt -s -l -w .
 	@ go mod tidy
 	@ echo ">> done"
 

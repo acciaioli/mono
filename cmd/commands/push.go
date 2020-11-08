@@ -2,10 +2,11 @@ package commands
 
 import (
 	"fmt"
-	"github.com/acciaioli/mono/cmd/env"
 
-	"github.com/acciaioli/mono/services/push"
 	"github.com/spf13/cobra"
+
+	"github.com/acciaioli/mono/cmd/env"
+	"github.com/acciaioli/mono/services/push"
 )
 
 func Push() *cobra.Command {

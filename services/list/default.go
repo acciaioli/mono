@@ -2,11 +2,12 @@ package list
 
 import (
 	"fmt"
-	"github.com/acciaioli/mono/services/checksum"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
+
+	"github.com/acciaioli/mono/services/checksum"
 
 	"github.com/pkg/errors"
 
@@ -14,12 +15,11 @@ import (
 )
 
 type Service struct {
-	Path string
-	Status *string
-	Checksum *string
+	Path                 string
+	Status               *string
+	Checksum             *string
 	LatestPushedChecksum *string
 }
-
 
 func List(bucket string) ([]Service, error) {
 	paths, err := listServices("./")
@@ -58,7 +58,7 @@ func listServices(root string) ([]string, error) {
 }
 
 func toServices(servicePaths []string, bucket string) ([]Service, error) {
-	type serviceErr struct{
+	type serviceErr struct {
 		s *Service
 		e error
 	}
@@ -86,7 +86,12 @@ func toServices(servicePaths []string, bucket string) ([]Service, error) {
 			}
 			s.LatestPushedChecksum = pushedChsum
 
-			status := func()string {if *chsum == *pushedChsum {return "ok"}; return "diff"}()
+			status := func() string {
+				if *chsum == *pushedChsum {
+					return "ok"
+				}
+				return "diff"
+			}()
 			s.Status = &status
 
 			serviceErrChan <- serviceErr{s: &s}
