@@ -32,20 +32,13 @@ func List() *cobra.Command {
 			// todo: proper display
 			for _, service := range services {
 				fmt.Printf("Service: %s\n", service.Path)
-				fmt.Printf("Status: %s\n", toString(service.Status))
-				fmt.Printf("Local Checksum: %s\n", toString(service.Checksum))
-				fmt.Printf("Pushed Checksum: %s\n", toString(service.LatestPushedChecksum))
+				fmt.Printf("Status: %s\n", service.Status)
+				fmt.Printf("Local Checksum: %s\n", service.Checksum)
+				fmt.Printf("Pushed Checksum: %s\n", service.LatestPushedChecksum)
 				fmt.Printf("\n")
 			}
 			return nil
 		},
 	}
 	return cmd
-}
-
-func toString(s *string) string {
-	if s == nil {
-		return ""
-	}
-	return *s
 }

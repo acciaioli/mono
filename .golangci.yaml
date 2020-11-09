@@ -50,7 +50,7 @@ linters:
 #    - stylecheck          # Stylecheck is a replacement for golint
 #    - unconvert           # Remove unnecessary type conversions
 #    - unparam             # Reports unused function parameters
-#    - whitespace          # Tool for detection of leading and trailing whitespace
+    - whitespace          # Tool for detection of leading and trailing whitespace
 #    - wsl                 # Whitespace Linter
 
   fast: false
