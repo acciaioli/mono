@@ -3,9 +3,9 @@ package commands
 import (
 	"fmt"
 
-	"github.com/acciaioli/mono/services/build"
-
 	"github.com/spf13/cobra"
+
+	"github.com/acciaioli/mono/services/build"
 )
 
 func Build() *cobra.Command {

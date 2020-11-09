@@ -3,8 +3,10 @@ package commands
 import (
 	"fmt"
 
-	"github.com/acciaioli/mono/services/checksum"
 	"github.com/spf13/cobra"
+
+	"github.com/acciaioli/mono/cmd/env"
+	"github.com/acciaioli/mono/services/checksum"
 )
 
 func Checksum() *cobra.Command {
@@ -17,26 +19,26 @@ func Checksum() *cobra.Command {
 
 		pushedFlag        = "pushed"
 		pushedDescription = "fetch checksum of the latest pushed service artifact"
-
-		bucketFlag        = "bucket"
-		bucketDescription = "artifacts bucket. format should be one of ['s3://',]"
 	)
 
 	var service string
 	var pushed bool
-	var bucket string
 
 	cmd := &cobra.Command{
 		Use:   commandUse,
 		Short: commandDescription,
 		RunE: func(cmd2 *cobra.Command, args []string) error {
-			var chsum *string
-			var err error
-			if pushed {
-				chsum, err = checksum.GetLatestChecksum(service, bucket)
-			} else {
-				chsum, err = checksum.ComputeChecksum(service)
+			bucket, err := env.LoadArtifactBucket()
+			if err != nil {
+				return err
 			}
+
+			chsum, err := func() (*string, error) {
+				if pushed {
+					return checksum.GetLatestChecksum(service, bucket)
+				}
+				return checksum.ComputeChecksum(service)
+			}()
 			if err != nil {
 				return err
 			}
@@ -48,7 +50,6 @@ func Checksum() *cobra.Command {
 
 	cmd.Flags().StringVar(&service, serviceFlag, "", serviceDescription)
 	cmd.Flags().BoolVar(&pushed, pushedFlag, false, pushedDescription)
-	cmd.Flags().StringVar(&bucket, bucketFlag, "", bucketDescription)
 
 	return cmd
 }

@@ -3,8 +3,10 @@ package commands
 import (
 	"fmt"
 
-	"github.com/acciaioli/mono/services/push"
 	"github.com/spf13/cobra"
+
+	"github.com/acciaioli/mono/cmd/env"
+	"github.com/acciaioli/mono/services/push"
 )
 
 func Push() *cobra.Command {
@@ -14,18 +16,19 @@ func Push() *cobra.Command {
 
 		artifactFlag        = "artifact"
 		artifactDescription = "relative path to the artifact to be pushed"
-
-		bucketFlag        = "bucket"
-		bucketDescription = "artifacts bucket. format should be one of ['s3://',]"
 	)
 
 	var artifact string
-	var bucket string
 
 	cmd := &cobra.Command{
 		Use:   commandUse,
 		Short: commandDescription,
 		RunE: func(cmd2 *cobra.Command, args []string) error {
+			bucket, err := env.LoadArtifactBucket()
+			if err != nil {
+				return err
+			}
+
 			location, err := push.Push(artifact, bucket)
 			if err != nil {
 				return err
@@ -37,7 +40,6 @@ func Push() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&artifact, artifactFlag, "", artifactDescription)
-	cmd.Flags().StringVar(&bucket, bucketFlag, "", bucketDescription)
 
 	return cmd
 }
