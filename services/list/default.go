@@ -14,11 +14,18 @@ import (
 	"github.com/acciaioli/mono/internal/common"
 )
 
+type ServiceStatus string
+
+const (
+	StatusOK   ServiceStatus = "ok"
+	StatusDiff ServiceStatus = "diff"
+)
+
 type Service struct {
 	Path                 string
-	Status               *string
-	Checksum             *string
-	LatestPushedChecksum *string
+	Status               ServiceStatus
+	Checksum             string
+	LatestPushedChecksum string
 }
 
 func List(bucket string) ([]Service, error) {
@@ -27,7 +34,7 @@ func List(bucket string) ([]Service, error) {
 		return nil, err
 	}
 
-	return toServices(paths, bucket)
+	return serviceChecksums(paths, bucket)
 }
 
 func listServices(root string) ([]string, error) {
@@ -57,7 +64,7 @@ func listServices(root string) ([]string, error) {
 	return services, nil
 }
 
-func toServices(servicePaths []string, bucket string) ([]Service, error) {
+func serviceChecksums(servicePaths []string, bucket string) ([]Service, error) {
 	type serviceErr struct {
 		s *Service
 		e error
@@ -77,22 +84,21 @@ func toServices(servicePaths []string, bucket string) ([]Service, error) {
 				serviceErrChan <- serviceErr{e: err}
 				return
 			}
-			s.Checksum = chsum
+			s.Checksum = *chsum
 
 			pushedChsum, err := checksum.GetLatestChecksum(path, bucket)
 			if err != nil {
 				serviceErrChan <- serviceErr{e: err}
 				return
 			}
-			s.LatestPushedChecksum = pushedChsum
+			s.LatestPushedChecksum = *pushedChsum
 
-			status := func() string {
+			s.Status = func() ServiceStatus {
 				if *chsum == *pushedChsum {
-					return "ok"
+					return StatusOK
 				}
-				return "diff"
+				return StatusDiff
 			}()
-			s.Status = &status
 
 			serviceErrChan <- serviceErr{s: &s}
 		}()

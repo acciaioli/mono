@@ -7,24 +7,60 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/acciaioli/mono/services/checksum"
-
 	"github.com/pkg/errors"
 
 	"github.com/acciaioli/mono/internal/common"
+	"github.com/acciaioli/mono/services/checksum"
+	"github.com/acciaioli/mono/services/list"
 )
 
-func Build(service string) (*string, error) {
-	if !common.IsServiceDir(service) {
-		return nil, errors.New(fmt.Sprintf("%s is not a valid service path", service))
-	}
+const (
+	BuildsRoot = ".builds"
+)
 
-	spec, err := common.LoadServiceSpec(service)
+type Artifact struct {
+	Service  string
+	Artifact string
+}
+
+func BuildServicesWithDiff(bucket string) ([]Artifact, error) {
+	services, err := list.List(bucket)
 	if err != nil {
 		return nil, err
 	}
 
+	var toBuild []string
+	for _, service := range services {
+		if service.Status == list.StatusDiff {
+			toBuild = append(toBuild, service.Path)
+		}
+	}
+	return BuildServices(toBuild)
+}
+
+func BuildServices(services []string) ([]Artifact, error) {
+	var artifacts []Artifact
+	for _, service := range services {
+		artifact, err := BuildService(service)
+		if err != nil {
+			return nil, err
+		}
+		artifacts = append(artifacts, Artifact{Service: service, Artifact: *artifact})
+	}
+	return artifacts, nil
+}
+
+func BuildService(service string) (*string, error) {
+	if !common.IsServiceDir(service) {
+		return nil, errors.New(fmt.Sprintf("%s is not a valid service path", service))
+	}
+
 	chsum, err := checksum.ComputeChecksum(service)
+	if err != nil {
+		return nil, err
+	}
+
+	spec, err := common.LoadServiceSpec(service)
 	if err != nil {
 		return nil, err
 	}
@@ -40,6 +76,10 @@ func Build(service string) (*string, error) {
 	}
 
 	return artifactBuildPath, nil
+}
+
+func Clean() error {
+	return os.RemoveAll(BuildsRoot)
 }
 
 func buildArtifact(serviceDir string, artifactSpec *common.ServiceSpecBuildArtifact) (*string, error) {
@@ -69,7 +109,7 @@ func buildArtifact(serviceDir string, artifactSpec *common.ServiceSpecBuildArtif
 }
 
 func moveArtifact(service string, chsum string, localPath string) (*string, error) {
-	buildPath := filepath.Join(common.BuildsRoot, service, fmt.Sprintf("%s.zip", chsum))
+	buildPath := filepath.Join(BuildsRoot, service, fmt.Sprintf("%s.zip", chsum))
 	err := os.MkdirAll(filepath.Dir(buildPath), os.ModePerm)
 	if err != nil {
 		return nil, errors.Wrap(err, "error renaming file")

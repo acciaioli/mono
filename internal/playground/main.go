@@ -8,7 +8,6 @@ func main() {
 	if l == nil {
 		fmt.Println("is nil")
 	}
-
 }
 
 //

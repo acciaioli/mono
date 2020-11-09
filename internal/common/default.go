@@ -7,8 +7,6 @@ import (
 
 const (
 	ServiceSpecFile = "service.yml"
-
-	BuildsRoot = ".tmp/builds"
 )
 
 func IsServiceDir(path string) bool {
