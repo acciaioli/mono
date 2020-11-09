@@ -60,8 +60,6 @@ Pushed Checksum: 1ce479560b36cd620b659c7bafe970cc307536dd
 ## To Do
 
 - enhance `mono list` (prefix, contains, suffix filter)
-- `build --all` support (build if current checksum differs from last pushed one)
-- `push --all` support (push all artifacts under the builds directory)
 - github actions
 - support for unit test
 - support for docker images as artifacts
