@@ -1,7 +1,7 @@
 package checksum
 
 import (
-	"crypto/sha1" //nolint
+	"crypto/sha1" // nolint
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -44,7 +44,7 @@ func GetLatestChecksum(service string, bucket string) (*string, error) {
 }
 
 func computeChecksum(service string) (*string, error) {
-	hash := sha1.New() //nolint
+	hash := sha1.New() // nolint
 	err := filepath.Walk(service, func(fPath string, fInfo os.FileInfo, err error) error {
 		if err != nil {
 			return err

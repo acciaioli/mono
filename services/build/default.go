@@ -46,7 +46,7 @@ func buildArtifact(serviceDir string, artifactSpec *common.ServiceSpecBuildArtif
 	if len(artifactSpec.Command) < 1 {
 		return nil, errors.New("build artifact has length 0")
 	}
-	cmd := exec.Command(artifactSpec.Command[0], artifactSpec.Command[1:]...) //nolint
+	cmd := exec.Command(artifactSpec.Command[0], artifactSpec.Command[1:]...) // nolint
 	//log.Printf("running command: %s\n", cmd.String())
 	cmd.Dir = serviceDir
 	stdout := bytes.Buffer{}
