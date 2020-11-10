@@ -27,7 +27,7 @@ jobs:
       - name: Test
         run: make test
       - name: My Action
-        uses: acciaioli/tbd@v1
+        uses: acciaioli/tbd@de624714d21ee7fb0096041a08dbc9eee93f630e
         with:
           name: juanito
 
