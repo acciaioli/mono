@@ -1,11 +1,13 @@
 name: CI-CD
 
 on:
-  - push
-
+  push:
+    tags:
+      - 'v*'
 jobs:
 
   ci:
+    name: Continuous Integration
     strategy:
       matrix:
         go-version: [1.14.x, 1.15.x]
@@ -26,15 +28,26 @@ jobs:
         run: make lint
       - name: Test
         run: make test
-      - name: My Action
-        uses: acciaioli/tbd@de624714d21ee7fb0096041a08dbc9eee93f630e
-        with:
-          name: juanito
 
   cd:
+    name: Continuous Delivery
     needs: ci
-    if: github.ref == 'refs/heads/master'
+    if: github.event.ref_type == 'tag'
     runs-on: ubuntu-latest
     steps:
-      - name: Todo
-        run: echo "todo"
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            Changes in this Release
+            - First Change
+            - Second Change
+          draft: false
+          prerelease: false
