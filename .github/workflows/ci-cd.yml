@@ -2,9 +2,7 @@ name: CI-CD
 
 on:
   push:
-  create:
-    tags:
-      - 'v*'
+
 jobs:
 
   ci:
