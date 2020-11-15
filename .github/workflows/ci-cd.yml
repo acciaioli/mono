@@ -19,15 +19,15 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: ${{ matrix.go-version }}
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v2
-      - name: Setup linter
+      - name: Setup Linter
         run: |
           curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s v1.24.0
           sudo cp ./bin/golangci-lint $GOPATH/bin/
-      - name: Lint
+      - name: Run Linter
         run: make lint
-      - name: Test
+      - name: Run Tests
         run: make test
 
   cd:
@@ -35,10 +35,16 @@ jobs:
     needs: ci
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v2
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.14.x
+      - name: Build Binary
+        run: make build
       - name: Create Release
-        id: create_release
+        id: create-release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -51,3 +57,13 @@ jobs:
             - Second Change
           draft: false
           prerelease: false
+      - name: Upload Release Binary
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: ./bin/mono.linux-amd64
+          asset_name: mono.linux-amd64
+          asset_content_type: application/octet-stream
