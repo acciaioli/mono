@@ -58,7 +58,7 @@ jobs:
           draft: false
           prerelease: false
       - name: Upload Release Linux Binary
-        id: upload-release-asset
+        id: upload-release-asset-linux
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -67,7 +67,7 @@ jobs:
           asset_path: ./bin/mono.linux-amd64
           asset_content_type: application/octet-stream
       - name: Upload Release Mac OS Binary
-        id: upload-release-asset
+        id: upload-release-asset-darwin
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -76,7 +76,7 @@ jobs:
           asset_path: ./bin/mono.darwin-amd64
           asset_content_type: application/octet-stream
       - name: Upload Release Windows Binary
-        id: upload-release-asset
+        id: upload-release-asset-windows
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
