@@ -32,6 +32,6 @@ install:
 
 build:
 	@ echo ">> building cli binaries"
-	@ echo "todo :P"
+	@ ./build.sh
 	@ echo ">> done"
 
