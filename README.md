@@ -1,5 +1,7 @@
 # mono
 
+![CI-CD](https://github.com/acciaioli/mono/workflows/CI-CD/badge.svg)
+
 ```
 ▶ mono
 monorepo management cli
@@ -21,6 +23,13 @@ Flags:
 Use "mono [command] --help" for more information about a command.
 ```
 
+## Install
+
+##### Linux
+```
+▶ sudo wget https://github.com/acciaioli/mono/releases/latest/download/mono.linux-amd64 -O /usr/local/bin/mono
+▶ sudo chmod +x /usr/local/bin/mono
+```
 
 ## Get Started
 
