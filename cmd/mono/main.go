@@ -4,14 +4,15 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/acciaioli/mono/cmd/commands"
-
 	"github.com/spf13/cobra"
+
+	"github.com/acciaioli/mono/cmd/commands"
+	"github.com/acciaioli/mono/cmd/display"
 )
 
 func main() {
 	if err := execute(); err != nil {
-		fmt.Printf("[error] something went wrong...\n==> %s\n", err.Error())
+		display.String(fmt.Sprintf("[error] something went wrong...\n==> %s\n", err.Error()))
 		os.Exit(1)
 	}
 }

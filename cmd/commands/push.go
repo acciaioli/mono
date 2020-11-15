@@ -1,10 +1,9 @@
 package commands
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
+	"github.com/acciaioli/mono/cmd/display"
 	"github.com/acciaioli/mono/cmd/env"
 	"github.com/acciaioli/mono/services/push"
 )
@@ -45,18 +44,16 @@ func Push() *cobra.Command {
 				pushed = append(pushed, *p)
 			}
 
-			// todo: proper display
+			headers := []string{"artifact", "status", "key", "error"}
+			var data [][]string
 			for _, p := range pushed {
-				fmt.Printf("Artifact: %s\n", p.Artifact)
-				fmt.Printf("Status: %s\n", p.Status)
 				if p.Err != nil {
-					fmt.Printf("Error: %s\n", p.Err.Error())
+					data = append(data, []string{p.Artifact, string(p.Status), "", p.Err.Error()})
 				}
-				if p.Key != nil {
-					fmt.Printf("Key: %s\n", *p.Key)
-				}
-				fmt.Printf("\n")
+				data = append(data, []string{p.Artifact, string(p.Status), *p.Key, ""})
 			}
+			display.Table(headers, data)
+
 			return nil
 		},
 	}
