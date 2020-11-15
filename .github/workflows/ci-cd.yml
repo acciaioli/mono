@@ -2,6 +2,7 @@ name: CI-CD
 
 on:
   push:
+  create:
     tags:
       - 'v*'
 jobs:
@@ -43,8 +44,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          tag_name: ${{ github.event.ref }}
+          release_name: Release ${{ github.event.ref }}
           body: |
             Changes in this Release
             - First Change
