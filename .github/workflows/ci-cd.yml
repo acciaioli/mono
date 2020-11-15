@@ -33,7 +33,6 @@ jobs:
   cd:
     name: Continuous Delivery
     needs: ci
-    if: github.event.ref_type == 'tag'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
