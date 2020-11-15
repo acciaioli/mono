@@ -65,6 +65,7 @@ jobs:
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
           asset_path: ./bin/mono.linux-amd64
+          asset_name: mono.linux-amd64
           asset_content_type: application/octet-stream
       - name: Upload Release Mac OS Binary
         id: upload-release-asset-darwin
@@ -74,6 +75,7 @@ jobs:
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
           asset_path: ./bin/mono.darwin-amd64
+          asset_name: mono.darwin-amd64
           asset_content_type: application/octet-stream
       - name: Upload Release Windows Binary
         id: upload-release-asset-windows
@@ -83,4 +85,5 @@ jobs:
         with:
           upload_url: ${{ steps.create-release.outputs.upload_url }}
           asset_path: ./bin/mono.windows-amd64.exe
+          asset_name: mono.windows-amd64
           asset_content_type: application/octet-stream
