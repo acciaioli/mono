@@ -41,7 +41,9 @@ jobs:
         with:
           go-version: 1.14.x
       - name: Build Binary
-        run: env VERSION=${{ github.event.ref }} make build
+        run: make build
+        env:
+          VERSION: ${GITHUB_REF#refs/tags/}
       - name: Create Release
         id: create-release
         uses: actions/create-release@v1
