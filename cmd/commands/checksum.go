@@ -1,10 +1,9 @@
 package commands
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
+	"github.com/acciaioli/mono/cmd/display"
 	"github.com/acciaioli/mono/cmd/env"
 	"github.com/acciaioli/mono/services/checksum"
 )
@@ -43,7 +42,7 @@ func Checksum() *cobra.Command {
 				return err
 			}
 
-			fmt.Println(*chsum)
+			display.String(*chsum)
 			return nil
 		},
 	}

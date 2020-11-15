@@ -1,10 +1,9 @@
 package commands
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
+	"github.com/acciaioli/mono/cmd/display"
 	"github.com/acciaioli/mono/cmd/env"
 	"github.com/acciaioli/mono/services/build"
 )
@@ -51,12 +50,13 @@ func Build() *cobra.Command {
 				}
 			}
 
-			// todo: proper display
+			headers := []string{"service", "artifact"}
+			var data [][]string
 			for _, artifact := range artifacts {
-				fmt.Printf("Service: %s\n", artifact.Service)
-				fmt.Printf("Artifact: %s\n", artifact.Artifact)
-				fmt.Printf("\n")
+				data = append(data, []string{artifact.Service, artifact.Artifact})
 			}
+			display.Table(headers, data)
+
 			return nil
 		},
 	}

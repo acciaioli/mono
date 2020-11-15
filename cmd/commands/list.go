@@ -1,10 +1,9 @@
 package commands
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
+	"github.com/acciaioli/mono/cmd/display"
 	"github.com/acciaioli/mono/cmd/env"
 	"github.com/acciaioli/mono/services/list"
 )
@@ -29,14 +28,13 @@ func List() *cobra.Command {
 				return err
 			}
 
-			// todo: proper display
+			headers := []string{"service", "status", "checksum", "local checksum"}
+			var data [][]string
 			for _, service := range services {
-				fmt.Printf("Service: %s\n", service.Path)
-				fmt.Printf("Status: %s\n", service.Status)
-				fmt.Printf("Local Checksum: %s\n", service.Checksum)
-				fmt.Printf("Pushed Checksum: %s\n", service.LatestPushedChecksum)
-				fmt.Printf("\n")
+				data = append(data, []string{service.Path, string(service.Status), service.LatestPushedChecksum, service.Checksum})
 			}
+			display.Table(headers, data)
+
 			return nil
 		},
 	}

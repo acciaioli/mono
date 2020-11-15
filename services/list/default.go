@@ -117,7 +117,7 @@ func serviceChecksums(servicePaths []string, bucket string) ([]Service, error) {
 	}
 
 	if allErrs != nil {
-		return nil, errors.New(fmt.Sprintf("errors: %s", strings.Join(allErrs, ";")))
+		return nil, errors.New(fmt.Sprintf("errors:\n%s", strings.Join(allErrs, "\n")))
 	}
 
 	return services, nil
