@@ -8,6 +8,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/acciaioli/mono/internal/specification"
+
+	"github.com/acciaioli/mono/internal/patterns"
+
 	"github.com/pkg/errors"
 
 	"github.com/acciaioli/mono/internal/common"
@@ -20,8 +24,12 @@ func ComputeChecksum(service string) (*string, error) {
 	if !common.IsServiceDir(service) {
 		return nil, errors.New(fmt.Sprintf("%s is not a valid service path", service))
 	}
+	serviceSpec, err := specification.Load(service)
+	if err != nil {
+		return nil, err
+	}
 
-	return computeChecksum(service)
+	return computeChecksum(service, serviceSpec.Checksum.Exclude)
 }
 
 func GetLatestChecksum(service string, bucket string) (*string, error) {
@@ -43,11 +51,26 @@ func GetLatestChecksum(service string, bucket string) (*string, error) {
 	return getLatestChecksum(service, bs)
 }
 
-func computeChecksum(service string) (*string, error) {
+func computeChecksum(serviceRoot string, excludedPatterns []string) (*string, error) {
 	hash := sha1.New() // nolint
-	err := filepath.Walk(service, func(fPath string, fInfo os.FileInfo, err error) error {
+
+	excluded, err := patterns.NewMatcher(excludedPatterns)
+	if err != nil {
+		return nil, err
+	}
+
+	err = filepath.Walk(serviceRoot, func(fPath string, fInfo os.FileInfo, err error) error {
 		if err != nil {
 			return err
+		}
+
+		rel, err := filepath.Rel(serviceRoot, fPath)
+		if err != nil {
+			return err
+		}
+
+		if excluded.Match(rel) {
+			return nil
 		}
 
 		if fInfo.IsDir() {

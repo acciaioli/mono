@@ -7,6 +7,8 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"github.com/acciaioli/mono/internal/specification"
+
 	"github.com/pkg/errors"
 
 	"github.com/acciaioli/mono/internal/common"
@@ -60,7 +62,7 @@ func BuildService(service string) (*string, error) {
 		return nil, err
 	}
 
-	spec, err := common.LoadServiceSpec(service)
+	spec, err := specification.Load(service)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +84,7 @@ func Clean() error {
 	return os.RemoveAll(BuildsRoot)
 }
 
-func buildArtifact(serviceDir string, artifactSpec *common.ServiceSpecBuildArtifact) (*string, error) {
+func buildArtifact(serviceDir string, artifactSpec *specification.BuildArtifact) (*string, error) {
 	if len(artifactSpec.Command) < 1 {
 		return nil, errors.New("build artifact has length 0")
 	}
