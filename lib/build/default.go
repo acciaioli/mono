@@ -7,72 +7,61 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/acciaioli/mono/internal/specification"
-
 	"github.com/pkg/errors"
 
 	"github.com/acciaioli/mono/internal/common"
-	"github.com/acciaioli/mono/services/checksum"
-	"github.com/acciaioli/mono/services/list"
+	"github.com/acciaioli/mono/internal/specification"
+	"github.com/acciaioli/mono/lib"
+	"github.com/acciaioli/mono/lib/list"
 )
 
 const (
 	BuildsRoot = ".builds"
 )
 
-type Artifact struct {
-	Service  string
-	Artifact string
+type Service struct {
+	Service      lib.Service
+	ArtifactPath string
 }
 
-func BuildServicesWithDiff(bucket string) ([]Artifact, error) {
-	services, err := list.List(bucket)
+func BuildOutdated(bs common.BlobStorage) ([]Service, error) {
+	services, err := list.List(bs)
 	if err != nil {
 		return nil, err
 	}
 
-	var toBuild []string
+	var diffServices []list.ListedService
 	for _, service := range services {
 		if service.Status == list.StatusDiff {
-			toBuild = append(toBuild, service.Path)
+			diffServices = append(diffServices, service)
 		}
 	}
-	return BuildServices(toBuild)
+	return BuildArtifacts(diffServices)
 }
 
-func BuildServices(services []string) ([]Artifact, error) {
-	var artifacts []Artifact
+func BuildArtifacts(services []list.ListedService) ([]Service, error) {
+	var artifacts []Service
 	for _, service := range services {
-		artifact, err := BuildService(service)
+		artifactPath, err := BuildArtifact(&service)
 		if err != nil {
 			return nil, err
 		}
-		artifacts = append(artifacts, Artifact{Service: service, Artifact: *artifact})
+		artifacts = append(artifacts, Service{Service: service.Service, ArtifactPath: *artifactPath})
 	}
 	return artifacts, nil
 }
 
-func BuildService(service string) (*string, error) {
-	if !common.IsServiceDir(service) {
-		return nil, errors.New(fmt.Sprintf("%s is not a valid service path", service))
-	}
-
-	chsum, err := checksum.ComputeChecksum(service)
+func BuildArtifact(service *list.ListedService) (*string, error) {
+	artifactLocalPath, err := buildArtifact(
+		service.Service.Path, &service.Service.Spec.Build.Artifact,
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	spec, err := specification.Load(service)
-	if err != nil {
-		return nil, err
-	}
-
-	artifactLocalPath, err := buildArtifact(service, &spec.Build.Artifact)
-	if err != nil {
-		return nil, err
-	}
-
-	artifactBuildPath, err := moveArtifact(service, *chsum, *artifactLocalPath)
+	artifactBuildPath, err := moveArtifact(
+		service.Service.Path, service.Checksum, *artifactLocalPath,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -84,13 +73,13 @@ func Clean() error {
 	return os.RemoveAll(BuildsRoot)
 }
 
-func buildArtifact(serviceDir string, artifactSpec *specification.BuildArtifact) (*string, error) {
+func buildArtifact(servicePath string, artifactSpec *specification.BuildArtifact) (*string, error) {
 	if len(artifactSpec.Command) < 1 {
 		return nil, errors.New("build artifact has length 0")
 	}
 	cmd := exec.Command(artifactSpec.Command[0], artifactSpec.Command[1:]...) // nolint
 	//log.Printf("running command: %s\n", cmd.String())
-	cmd.Dir = serviceDir
+	cmd.Dir = servicePath
 	stdout := bytes.Buffer{}
 	stderr := bytes.Buffer{}
 	cmd.Stdout = &stdout
@@ -102,7 +91,7 @@ func buildArtifact(serviceDir string, artifactSpec *specification.BuildArtifact)
 		return nil, errors.Wrap(err, "error running build artifact command")
 	}
 
-	artifactPath := filepath.Join(serviceDir, artifactSpec.Name)
+	artifactPath := filepath.Join(servicePath, artifactSpec.Name)
 	if !common.FileExists(artifactPath) {
 		return nil, errors.New("build artifact not found after successful build artifact command run")
 	}

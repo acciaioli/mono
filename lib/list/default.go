@@ -7,37 +7,41 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/acciaioli/mono/services/checksum"
-
 	"github.com/pkg/errors"
 
 	"github.com/acciaioli/mono/internal/common"
+	"github.com/acciaioli/mono/lib"
+	"github.com/acciaioli/mono/lib/checksum"
 )
 
-type ServiceStatus string
+type Status string
 
 const (
-	StatusOK   ServiceStatus = "ok"
-	StatusDiff ServiceStatus = "diff"
+	StatusOK   Status = "ok"
+	StatusDiff Status = "diff"
 )
 
-type Service struct {
-	Path                 string
-	Status               ServiceStatus
+type ListedService struct {
+	Service              lib.Service
+	Status               Status
 	Checksum             string
 	LatestPushedChecksum string
 }
 
-func List(bucket string) ([]Service, error) {
-	paths, err := listServices("./")
+func List(bs common.BlobStorage) ([]ListedService, error) {
+	paths, err := discoverServicePaths("./")
 	if err != nil {
 		return nil, err
 	}
 
-	return serviceChecksums(paths, bucket)
+	services, err := lib.LoadServices(paths)
+	if err != nil {
+		return nil, err
+	}
+	return servicesStatus(services, bs)
 }
 
-func listServices(root string) ([]string, error) {
+func discoverServicePaths(root string) ([]string, error) {
 	var services []string
 
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
@@ -64,36 +68,36 @@ func listServices(root string) ([]string, error) {
 	return services, nil
 }
 
-func serviceChecksums(servicePaths []string, bucket string) ([]Service, error) {
+func servicesStatus(services []lib.Service, bs common.BlobStorage) ([]ListedService, error) {
 	type serviceErr struct {
-		s *Service
+		s *ListedService
 		e error
 	}
-	serviceErrChan := make(chan serviceErr, len(servicePaths))
+	serviceErrChan := make(chan serviceErr, len(services))
 
 	wg := sync.WaitGroup{}
 
-	for _, path := range servicePaths {
-		path := path
+	for _, service := range services {
+		service := service
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			s := Service{Path: path}
-			chsum, err := checksum.ComputeChecksum(path)
+			s := ListedService{Service: service}
+			chsum, err := checksum.ComputeChecksum(&service)
 			if err != nil {
 				serviceErrChan <- serviceErr{e: err}
 				return
 			}
 			s.Checksum = *chsum
 
-			pushedChsum, err := checksum.GetLatestChecksum(path, bucket)
+			pushedChsum, err := checksum.GetLatestChecksum(&service, bs)
 			if err != nil {
 				serviceErrChan <- serviceErr{e: err}
 				return
 			}
 			s.LatestPushedChecksum = *pushedChsum
 
-			s.Status = func() ServiceStatus {
+			s.Status = func() Status {
 				if *chsum == *pushedChsum {
 					return StatusOK
 				}
@@ -106,19 +110,19 @@ func serviceChecksums(servicePaths []string, bucket string) ([]Service, error) {
 	wg.Wait()
 	close(serviceErrChan)
 
-	var services []Service
+	var listedServices []ListedService
 	var allErrs []string
 	for se := range serviceErrChan {
 		if se.e != nil {
 			allErrs = append(allErrs, se.e.Error())
 			continue
 		}
-		services = append(services, *se.s)
+		listedServices = append(listedServices, *se.s)
 	}
 
 	if allErrs != nil {
 		return nil, errors.New(fmt.Sprintf("errors:\n%s", strings.Join(allErrs, "\n")))
 	}
 
-	return services, nil
+	return listedServices, nil
 }

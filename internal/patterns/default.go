@@ -14,7 +14,6 @@ func NewMatcher(patterns []string) (*Matcher, error) {
 	pm := Matcher{}
 
 	for _, pattern := range patterns {
-
 		if strings.HasSuffix(pattern, "/") {
 			pm.dirs = append(pm.dirs, strings.TrimSuffix(pattern, "/"))
 		} else {

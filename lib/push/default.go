@@ -8,11 +8,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/acciaioli/mono/services/build"
-
 	"github.com/pkg/errors"
 
 	"github.com/acciaioli/mono/internal/common"
+	"github.com/acciaioli/mono/lib/build"
 )
 
 type PushStatus string

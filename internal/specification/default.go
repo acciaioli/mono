@@ -2,12 +2,9 @@ package specification
 
 import (
 	"io/ioutil"
-	"path/filepath"
 
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
-
-	"github.com/acciaioli/mono/internal/common"
 )
 
 type Spec struct {
@@ -28,8 +25,7 @@ type BuildArtifact struct {
 	Command []string `yaml:"command"`
 }
 
-func Load(servicePath string) (*Spec, error) {
-	specPath := filepath.Join(servicePath, common.ServiceSpecFile)
+func Load(specPath string) (*Spec, error) {
 	yamlB, err := ioutil.ReadFile(specPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "error reading spec file")
