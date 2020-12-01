@@ -7,7 +7,6 @@ import (
 	"github.com/acciaioli/mono/cmd/env"
 	"github.com/acciaioli/mono/internal/common"
 	"github.com/acciaioli/mono/lib"
-	"github.com/acciaioli/mono/lib/build"
 )
 
 func Build() *cobra.Command {
@@ -30,11 +29,9 @@ func Build() *cobra.Command {
 		Short: commandDescription,
 		RunE: func(cmd2 *cobra.Command, args []string) error {
 			if clean {
-				return build.Clean()
+				return lib.Clean()
 			}
 
-			var bServices []build.Service
-			var err error
 			bucket, err := env.LoadArtifactBucket()
 			if err != nil {
 				return err
@@ -44,26 +41,20 @@ func Build() *cobra.Command {
 				return err
 			}
 
-			if servicePaths == nil {
-				bServices, err = build.BuildOutdatedServices(bs)
-				if err != nil {
-					return err
+			builds, err := func() ([]lib.Build, error) {
+				if servicePaths == nil {
+					return lib.BuildOutdatedServices(bs)
 				}
-			} else {
-				services, err := lib.LoadServices(servicePaths)
-				if err != nil {
-					return err
-				}
-				bServices, err = build.BuildServices(services, bs)
-				if err != nil {
-					return err
-				}
+				return lib.BuildServices(bs, servicePaths)
+			}()
+			if err != nil {
+				return err
 			}
 
 			headers := []string{"service", "artifact"}
 			var data [][]string
-			for _, bService := range bServices {
-				data = append(data, []string{bService.Service.Path, bService.ArtifactPath})
+			for _, row := range builds {
+				data = append(data, []string{row.Service.Path, row.ArtifactPath})
 			}
 			display.Table(headers, data)
 

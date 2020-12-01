@@ -1,12 +1,15 @@
 package commands
 
 import (
+	"strconv"
+
+	"github.com/acciaioli/mono/lib"
+
 	"github.com/spf13/cobra"
 
 	"github.com/acciaioli/mono/cmd/display"
 	"github.com/acciaioli/mono/cmd/env"
 	"github.com/acciaioli/mono/internal/common"
-	"github.com/acciaioli/mono/lib/list"
 )
 
 func List() *cobra.Command {
@@ -28,19 +31,20 @@ func List() *cobra.Command {
 				return err
 			}
 
-			lServices, err := list.List(bs)
+			listed, err := lib.List(bs)
 			if err != nil {
 				return err
 			}
 
-			headers := []string{"service", "status", "checksum", "local checksum"}
+			headers := []string{"service", "diff", "version", "checksum", "local checksum"}
 			var data [][]string
-			for _, lService := range lServices {
+			for _, row := range listed {
 				data = append(data, []string{
-					lService.Service.Path,
-					string(lService.Status),
-					lService.LatestPushedChecksum,
-					lService.Checksum,
+					row.Service.Path,
+					strconv.FormatBool(row.Diff()),
+					strconv.Itoa(row.Version),
+					row.Checksum,
+					row.LocalChecksum,
 				})
 			}
 			display.Table(headers, data)

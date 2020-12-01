@@ -1,4 +1,4 @@
-package build
+package lib
 
 import (
 	"bytes"
@@ -11,75 +11,83 @@ import (
 
 	"github.com/acciaioli/mono/internal/common"
 	"github.com/acciaioli/mono/internal/specification"
-	"github.com/acciaioli/mono/lib"
-	"github.com/acciaioli/mono/lib/list"
 )
 
 const (
-	BuildsRoot = ".builds"
+	buildsRoot = ".builds"
 )
 
-type Service struct {
-	Service      lib.Service
+type Build struct {
+	Service      Service
 	ArtifactPath string
 }
 
-func BuildOutdatedServices(bs common.BlobStorage) ([]Service, error) {
-	services, err := list.List(bs)
+func BuildOutdatedServices(bs common.BlobStorage) ([]Build, error) {
+	services, err := LoadServices()
 	if err != nil {
 		return nil, err
 	}
 
-	var diffServices []list.Service
-	for _, service := range services {
-		if service.Status == list.StatusDiff {
-			diffServices = append(diffServices, service)
+	states, err := GetServicesState(bs, services)
+	if err != nil {
+		return nil, err
+	}
+
+	var diffs []ServiceState
+	for _, state := range states {
+		if state.Diff() {
+			diffs = append(diffs, state)
 		}
 	}
-	return buildServices(diffServices)
+	return buildServices(diffs)
 }
 
-func BuildServices(services []lib.Service, bs common.BlobStorage) ([]Service, error) {
-	lServices, err := list.ServicesStatus(services, bs)
+func BuildServices(bs common.BlobStorage, servicePaths []string) ([]Build, error) {
+	services, err := LoadServices(loadSpecificServices(servicePaths))
 	if err != nil {
 		return nil, err
 	}
 
-	return buildServices(lServices)
+	states, err := GetServicesState(bs, services)
+	if err != nil {
+		return nil, err
+	}
+
+	return buildServices(states)
 }
 
-func buildServices(lServices []list.Service) ([]Service, error) {
-	var bServices []Service
-	for _, lService := range lServices {
+func Clean() error {
+	return os.RemoveAll(buildsRoot)
+}
+
+func buildServices(states []ServiceState) ([]Build, error) {
+	var builds []Build
+	for _, lService := range states {
 		artifactPath, err := buildService(&lService)
 		if err != nil {
 			return nil, err
 		}
-		bServices = append(bServices, Service{Service: lService.Service, ArtifactPath: *artifactPath})
+		builds = append(builds, Build{Service: *lService.Service, ArtifactPath: *artifactPath})
 	}
-	return bServices, nil
+	return builds, nil
 }
 
-func buildService(service *list.Service) (*string, error) {
+func buildService(state *ServiceState) (*string, error) {
 	artifactLocalPath, err := buildArtifact(
-		service.Service.Path, &service.Service.Spec.Build.Artifact,
+		state.Service.Path, &state.Service.Spec.Build.Artifact,
 	)
 	if err != nil {
 		return nil, err
 	}
 
 	artifactBuildPath, err := moveArtifact(
-		service.Service.Path, service.Checksum, *artifactLocalPath,
+		state.Service.Path, state.Checksum, *artifactLocalPath,
 	)
 	if err != nil {
 		return nil, err
 	}
 
 	return artifactBuildPath, nil
-}
-
-func Clean() error {
-	return os.RemoveAll(BuildsRoot)
 }
 
 func buildArtifact(servicePath string, artifactSpec *specification.BuildArtifact) (*string, error) {
@@ -109,7 +117,7 @@ func buildArtifact(servicePath string, artifactSpec *specification.BuildArtifact
 }
 
 func moveArtifact(servicePath string, chsum string, localPath string) (*string, error) {
-	buildPath := filepath.Join(BuildsRoot, servicePath, fmt.Sprintf("%s.zip", chsum))
+	buildPath := filepath.Join(buildsRoot, servicePath, fmt.Sprintf("%s.zip", chsum))
 
 	err := os.MkdirAll(filepath.Dir(buildPath), os.ModePerm)
 	if err != nil {

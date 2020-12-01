@@ -1,4 +1,4 @@
-package push
+package lib
 
 import (
 	"fmt"
@@ -11,7 +11,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/acciaioli/mono/internal/common"
-	"github.com/acciaioli/mono/lib/build"
 )
 
 type PushStatus string
@@ -31,12 +30,12 @@ type Pushed struct {
 func PushAllArtifacts(bs common.BlobStorage) ([]Pushed, error) {
 	var artifacts []string
 
-	_, err := os.Stat(build.BuildsRoot)
+	_, err := os.Stat(buildsRoot)
 	if err != nil {
 		return nil, errors.New("no artifacts found")
 	}
 
-	err = filepath.Walk(build.BuildsRoot, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(buildsRoot, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return errors.Wrap(err, "error walking builds directory")
 		}
@@ -51,28 +50,10 @@ func PushAllArtifacts(bs common.BlobStorage) ([]Pushed, error) {
 		return nil, err
 	}
 
-	return pushArtifacts(bs, artifacts), nil
+	return PushArtifacts(bs, artifacts), nil
 }
 
-func PushArtifact(bs common.BlobStorage, artifact string) (*Pushed, error) {
-	if artifact == "" {
-		return nil, errors.New("artifact cannot be empty")
-	}
-	if !strings.HasPrefix(artifact, build.BuildsRoot) {
-		return nil, errors.New(fmt.Sprintf("artifact should be under the builds root directory (%s)", build.BuildsRoot))
-	}
-	if !common.FileExists(artifact) {
-		return nil, errors.New(fmt.Sprintf("artifact `%s` does not exist", artifact))
-	}
-
-	key, err := pushArtifact(bs, artifact)
-	if err != nil {
-		return &Pushed{Artifact: artifact, Status: StatusFailed, Err: err}, nil
-	}
-	return &Pushed{Artifact: artifact, Status: StatusSuccessful, Key: key}, nil
-}
-
-func pushArtifacts(bs common.BlobStorage, artifacts []string) []Pushed {
+func PushArtifacts(bs common.BlobStorage, artifacts []string) []Pushed {
 	pushedErrChan := make(chan Pushed, len(artifacts))
 	wg := sync.WaitGroup{}
 
@@ -101,7 +82,17 @@ func pushArtifacts(bs common.BlobStorage, artifacts []string) []Pushed {
 }
 
 func pushArtifact(bs common.BlobStorage, artifact string) (*string, error) {
-	tmpKey, err := filepath.Rel(build.BuildsRoot, artifact)
+	if artifact == "" {
+		return nil, errors.New("artifact cannot be empty")
+	}
+	if !strings.HasPrefix(artifact, buildsRoot) {
+		return nil, errors.New(fmt.Sprintf("artifact should be under the builds root directory (%s)", buildsRoot))
+	}
+	if !common.FileExists(artifact) {
+		return nil, errors.New(fmt.Sprintf("artifact `%s` does not exist", artifact))
+	}
+
+	tmpKey, err := filepath.Rel(buildsRoot, artifact)
 	if err != nil {
 		return nil, errors.Wrap(err, "error handling artifact path root")
 	}
