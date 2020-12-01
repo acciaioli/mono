@@ -21,14 +21,14 @@ const (
 	StatusDiff Status = "diff"
 )
 
-type ListedService struct {
+type Service struct {
 	Service              lib.Service
 	Status               Status
 	Checksum             string
 	LatestPushedChecksum string
 }
 
-func List(bs common.BlobStorage) ([]ListedService, error) {
+func List(bs common.BlobStorage) ([]Service, error) {
 	paths, err := discoverServicePaths("./")
 	if err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func List(bs common.BlobStorage) ([]ListedService, error) {
 	if err != nil {
 		return nil, err
 	}
-	return servicesStatus(services, bs)
+	return ServicesStatus(services, bs)
 }
 
 func discoverServicePaths(root string) ([]string, error) {
@@ -68,9 +68,9 @@ func discoverServicePaths(root string) ([]string, error) {
 	return services, nil
 }
 
-func servicesStatus(services []lib.Service, bs common.BlobStorage) ([]ListedService, error) {
+func ServicesStatus(services []lib.Service, bs common.BlobStorage) ([]Service, error) {
 	type serviceErr struct {
-		s *ListedService
+		s *Service
 		e error
 	}
 	serviceErrChan := make(chan serviceErr, len(services))
@@ -82,7 +82,7 @@ func servicesStatus(services []lib.Service, bs common.BlobStorage) ([]ListedServ
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			s := ListedService{Service: service}
+			s := Service{Service: service}
 			chsum, err := checksum.ComputeChecksum(&service)
 			if err != nil {
 				serviceErrChan <- serviceErr{e: err}
@@ -110,7 +110,7 @@ func servicesStatus(services []lib.Service, bs common.BlobStorage) ([]ListedServ
 	wg.Wait()
 	close(serviceErrChan)
 
-	var listedServices []ListedService
+	var listedServices []Service
 	var allErrs []string
 	for se := range serviceErrChan {
 		if se.e != nil {

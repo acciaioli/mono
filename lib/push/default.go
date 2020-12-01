@@ -28,12 +28,12 @@ type Pushed struct {
 	Err      error
 }
 
-func PushAllArtifacts(bucket string) ([]Pushed, error) {
+func PushAllArtifacts(bs common.BlobStorage) ([]Pushed, error) {
 	var artifacts []string
 
 	_, err := os.Stat(build.BuildsRoot)
 	if err != nil {
-		return nil, nil
+		return nil, errors.New("no artifacts found")
 	}
 
 	err = filepath.Walk(build.BuildsRoot, func(path string, info os.FileInfo, err error) error {
@@ -51,15 +51,10 @@ func PushAllArtifacts(bucket string) ([]Pushed, error) {
 		return nil, err
 	}
 
-	bs, err := common.NewBlobStorage(bucket)
-	if err != nil {
-		return nil, err
-	}
-
 	return pushArtifacts(bs, artifacts), nil
 }
 
-func PushArtifact(bucket string, artifact string) (*Pushed, error) {
+func PushArtifact(bs common.BlobStorage, artifact string) (*Pushed, error) {
 	if artifact == "" {
 		return nil, errors.New("artifact cannot be empty")
 	}
@@ -68,11 +63,6 @@ func PushArtifact(bucket string, artifact string) (*Pushed, error) {
 	}
 	if !common.FileExists(artifact) {
 		return nil, errors.New(fmt.Sprintf("artifact `%s` does not exist", artifact))
-	}
-
-	bs, err := common.NewBlobStorage(bucket)
-	if err != nil {
-		return nil, err
 	}
 
 	key, err := pushArtifact(bs, artifact)
@@ -111,16 +101,57 @@ func pushArtifacts(bs common.BlobStorage, artifacts []string) []Pushed {
 }
 
 func pushArtifact(bs common.BlobStorage, artifact string) (*string, error) {
+	tmpKey, err := filepath.Rel(build.BuildsRoot, artifact)
+	if err != nil {
+		return nil, errors.Wrap(err, "error handling artifact path root")
+	}
+
+	servicePath := filepath.Dir(tmpKey)
+	chsumExt := strings.Split(filepath.Base(tmpKey), ".")
+	if len(chsumExt) != 2 {
+		return nil, errors.Wrap(err, "error handling artifact path base")
+	}
+
+	version, err := nextVersion(bs, servicePath)
+	if err != nil {
+		return nil, err
+	}
+
 	body, err := ioutil.ReadFile(artifact)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("error reading artifact file `%s`", artifact))
 	}
 
-	key := strings.TrimPrefix(artifact, build.BuildsRoot)
-	err = bs.Put(key, body)
+	newKey := common.KeyFromArtifact(&common.Artifact{
+		ServicePath: servicePath,
+		Version:     *version,
+		Checksum:    chsumExt[0],
+		Extension:   chsumExt[1],
+	})
+
+	err = bs.Put(newKey, body)
 	if err != nil {
 		return nil, err
 	}
 
-	return &key, nil
+	return &newKey, nil
+}
+
+func nextVersion(bs common.BlobStorage, service string) (*int, error) {
+	latestKey, err := bs.GetLatestKey(service)
+	if err != nil {
+		return nil, err
+	}
+
+	if latestKey == nil {
+		one := 1
+		return &one, nil
+	} else {
+		a, err := common.ArtifactFromKey(*latestKey)
+		if err != nil {
+			return nil, err
+		}
+		version := a.Version + 1
+		return &version, nil
+	}
 }

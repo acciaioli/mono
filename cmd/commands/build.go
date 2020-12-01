@@ -5,7 +5,9 @@ import (
 
 	"github.com/acciaioli/mono/cmd/display"
 	"github.com/acciaioli/mono/cmd/env"
-	"github.com/acciaioli/mono/services/build"
+	"github.com/acciaioli/mono/internal/common"
+	"github.com/acciaioli/mono/lib"
+	"github.com/acciaioli/mono/lib/build"
 )
 
 func Build() *cobra.Command {
@@ -20,7 +22,7 @@ func Build() *cobra.Command {
 		cleanDescription = "cleanup builds directory"
 	)
 
-	var services []string
+	var servicePaths []string
 	var clean bool
 
 	cmd := &cobra.Command{
@@ -31,20 +33,28 @@ func Build() *cobra.Command {
 				return build.Clean()
 			}
 
-			var artifacts []build.Artifact
+			var bServices []build.Service
 			var err error
+			bucket, err := env.LoadArtifactBucket()
+			if err != nil {
+				return err
+			}
+			bs, err := common.NewBlobStorage(bucket)
+			if err != nil {
+				return err
+			}
 
-			if services == nil {
-				bucket, err := env.LoadArtifactBucket()
-				if err != nil {
-					return err
-				}
-				artifacts, err = build.BuildServicesWithDiff(bucket)
+			if servicePaths == nil {
+				bServices, err = build.BuildOutdatedServices(bs)
 				if err != nil {
 					return err
 				}
 			} else {
-				artifacts, err = build.BuildServices(services)
+				services, err := lib.LoadServices(servicePaths)
+				if err != nil {
+					return err
+				}
+				bServices, err = build.BuildServices(services, bs)
 				if err != nil {
 					return err
 				}
@@ -52,8 +62,8 @@ func Build() *cobra.Command {
 
 			headers := []string{"service", "artifact"}
 			var data [][]string
-			for _, artifact := range artifacts {
-				data = append(data, []string{artifact.Service, artifact.Artifact})
+			for _, bService := range bServices {
+				data = append(data, []string{bService.Service.Path, bService.ArtifactPath})
 			}
 			display.Table(headers, data)
 
@@ -61,7 +71,7 @@ func Build() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringArrayVar(&services, servicesFlag, nil, servicesDescription)
+	cmd.Flags().StringArrayVar(&servicePaths, servicesFlag, nil, servicesDescription)
 	cmd.Flags().BoolVar(&clean, cleanFlag, false, cleanDescription)
 
 	return cmd

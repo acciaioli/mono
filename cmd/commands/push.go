@@ -5,7 +5,8 @@ import (
 
 	"github.com/acciaioli/mono/cmd/display"
 	"github.com/acciaioli/mono/cmd/env"
-	"github.com/acciaioli/mono/services/push"
+	"github.com/acciaioli/mono/internal/common"
+	"github.com/acciaioli/mono/lib/push"
 )
 
 func Push() *cobra.Command {
@@ -30,14 +31,18 @@ func Push() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			bs, err := common.NewBlobStorage(bucket)
+			if err != nil {
+				return err
+			}
 
 			if artifact == "" {
-				pushed, err = push.PushAllArtifacts(bucket)
+				pushed, err = push.PushAllArtifacts(bs)
 				if err != nil {
 					return err
 				}
 			} else {
-				p, err := push.PushArtifact(bucket, artifact)
+				p, err := push.PushArtifact(bs, artifact)
 				if err != nil {
 					return err
 				}

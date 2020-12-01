@@ -5,22 +5,24 @@ import (
 
 	"github.com/acciaioli/mono/cmd/display"
 	"github.com/acciaioli/mono/cmd/env"
-	"github.com/acciaioli/mono/services/checksum"
+	"github.com/acciaioli/mono/internal/common"
+	"github.com/acciaioli/mono/lib"
+	"github.com/acciaioli/mono/lib/checksum"
 )
 
 func Checksum() *cobra.Command {
 	const (
 		commandUse         = "checksum"
-		commandDescription = "Computes/Fetches a service checksum"
+		commandDescription = "Computes/Fetches a servicePath checksum"
 
 		serviceFlag        = "service"
-		serviceDescription = "relative path to the target service root directory"
+		serviceDescription = "relative path to the target servicePath root directory"
 
 		pushedFlag        = "pushed"
-		pushedDescription = "fetch checksum of the latest pushed service artifact"
+		pushedDescription = "fetch checksum of the latest pushed servicePath artifact"
 	)
 
-	var service string
+	var servicePath string
 	var pushed bool
 
 	cmd := &cobra.Command{
@@ -31,10 +33,17 @@ func Checksum() *cobra.Command {
 			if err != nil {
 				return err
 			}
-
+			bs, err := common.NewBlobStorage(bucket)
+			if err != nil {
+				return err
+			}
+			service, err := lib.LoadService(servicePath)
+			if err != nil {
+				return err
+			}
 			chsum, err := func() (*string, error) {
 				if pushed {
-					return checksum.GetLatestChecksum(service, bucket)
+					return checksum.GetLatestChecksum(service, bs)
 				}
 				return checksum.ComputeChecksum(service)
 			}()
@@ -47,7 +56,7 @@ func Checksum() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&service, serviceFlag, "", serviceDescription)
+	cmd.Flags().StringVar(&servicePath, serviceFlag, "", serviceDescription)
 	cmd.Flags().BoolVar(&pushed, pushedFlag, false, pushedDescription)
 
 	return cmd

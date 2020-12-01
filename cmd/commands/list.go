@@ -5,7 +5,8 @@ import (
 
 	"github.com/acciaioli/mono/cmd/display"
 	"github.com/acciaioli/mono/cmd/env"
-	"github.com/acciaioli/mono/services/list"
+	"github.com/acciaioli/mono/internal/common"
+	"github.com/acciaioli/mono/lib/list"
 )
 
 func List() *cobra.Command {
@@ -22,16 +23,25 @@ func List() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			bs, err := common.NewBlobStorage(bucket)
+			if err != nil {
+				return err
+			}
 
-			services, err := list.List(bucket)
+			lServices, err := list.List(bs)
 			if err != nil {
 				return err
 			}
 
 			headers := []string{"service", "status", "checksum", "local checksum"}
 			var data [][]string
-			for _, service := range services {
-				data = append(data, []string{service.Path, string(service.Status), service.LatestPushedChecksum, service.Checksum})
+			for _, lService := range lServices {
+				data = append(data, []string{
+					lService.Service.Path,
+					string(lService.Status),
+					lService.LatestPushedChecksum,
+					lService.Checksum,
+				})
 			}
 			display.Table(headers, data)
 

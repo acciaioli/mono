@@ -81,10 +81,10 @@ func getLatestChecksum(servicePath string, bs common.BlobStorage) (*string, erro
 		return nil, err
 	}
 	if latestKey == nil {
-		chsum := ""
+		chsum := "-"
 		return &chsum, nil
 	}
-	artifact, err := common.SplitArtifactKey(*latestKey)
+	artifact, err := common.ArtifactFromKey(*latestKey)
 	if err != nil {
 		return nil, err
 	}

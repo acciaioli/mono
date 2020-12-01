@@ -24,34 +24,43 @@ type Service struct {
 	ArtifactPath string
 }
 
-func BuildOutdated(bs common.BlobStorage) ([]Service, error) {
+func BuildOutdatedServices(bs common.BlobStorage) ([]Service, error) {
 	services, err := list.List(bs)
 	if err != nil {
 		return nil, err
 	}
 
-	var diffServices []list.ListedService
+	var diffServices []list.Service
 	for _, service := range services {
 		if service.Status == list.StatusDiff {
 			diffServices = append(diffServices, service)
 		}
 	}
-	return BuildArtifacts(diffServices)
+	return buildServices(diffServices)
 }
 
-func BuildArtifacts(services []list.ListedService) ([]Service, error) {
-	var artifacts []Service
-	for _, service := range services {
-		artifactPath, err := BuildArtifact(&service)
+func BuildServices(services []lib.Service, bs common.BlobStorage) ([]Service, error) {
+	lServices, err := list.ServicesStatus(services, bs)
+	if err != nil {
+		return nil, err
+	}
+
+	return buildServices(lServices)
+}
+
+func buildServices(lServices []list.Service) ([]Service, error) {
+	var bServices []Service
+	for _, lService := range lServices {
+		artifactPath, err := buildService(&lService)
 		if err != nil {
 			return nil, err
 		}
-		artifacts = append(artifacts, Service{Service: service.Service, ArtifactPath: *artifactPath})
+		bServices = append(bServices, Service{Service: lService.Service, ArtifactPath: *artifactPath})
 	}
-	return artifacts, nil
+	return bServices, nil
 }
 
-func BuildArtifact(service *list.ListedService) (*string, error) {
+func buildService(service *list.Service) (*string, error) {
 	artifactLocalPath, err := buildArtifact(
 		service.Service.Path, &service.Service.Spec.Build.Artifact,
 	)
@@ -99,8 +108,9 @@ func buildArtifact(servicePath string, artifactSpec *specification.BuildArtifact
 	return &artifactPath, nil
 }
 
-func moveArtifact(service string, chsum string, localPath string) (*string, error) {
-	buildPath := filepath.Join(BuildsRoot, service, fmt.Sprintf("%s.zip", chsum))
+func moveArtifact(servicePath string, chsum string, localPath string) (*string, error) {
+	buildPath := filepath.Join(BuildsRoot, servicePath, fmt.Sprintf("%s.zip", chsum))
+
 	err := os.MkdirAll(filepath.Dir(buildPath), os.ModePerm)
 	if err != nil {
 		return nil, errors.Wrap(err, "error renaming file")
