@@ -3,3 +3,6 @@ bin/
 
 .idea/
 .env
+
+tmp.md
+internal/playground.go

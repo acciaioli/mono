@@ -40,65 +40,60 @@ Use "mono [command] --help" for more information about a command.
 ▶ export MONO_ARTIFACT_BUCKET=my-aws-s3-bucket
 ```
 
-### mono commands
+### mono usage
+
 ```
+
+▶ mono --version
+mono version snapshot-juan-dc0649b
+
 ▶ mono list
-SERVICE                 STATUS  CHECKSUM        LOCAL CHECKSUM                          
-examples/python-service diff                    29d93f3235df9a83f36c471085ba4f0b105ddec2
-examples/go-service     diff                    78a79ed651e3d48b7a1a7346b022673e674abb8a
+SERVICE                	DIFF	VERSION	CHECKSUM	LOCAL CHECKSUM                           
+examples/go-service    	true	0      	-       	5215256745a800ab8909097d230933f42ebe249f	
+examples/python-service	true	0      	-       	fc09aaad1dc4cfd8f3165d9f5f9af2f394675664	
 
-▶ mono checksum --service=examples/python-service
-29d93f3235df9a83f36c471085ba4f0b105ddec2
-
-▶ mono checksum --service=examples/python-service --pushed
-
-# build a service
-▶ mono build --service=examples/python-service
-SERVICE                 ARTIFACT                                                                    
-examples/python-service .builds/examples/python-service/29d93f3235df9a83f36c471085ba4f0b105ddec2.zip
-
-# build sereral services
-▶ mono build --service=examples/python-service --service=examples/go-service
-SERVICE                 ARTIFACT                                                                    
-examples/python-service .builds/examples/python-service/29d93f3235df9a83f36c471085ba4f0b105ddec2.zip
-examples/go-service     .builds/examples/go-service/78a79ed651e3d48b7a1a7346b022673e674abb8a.zip    
-
-# build all services which are not
-▶ mono build
-SERVICE                 ARTIFACT                                                                    
-examples/python-service .builds/examples/python-service/29d93f3235df9a83f36c471085ba4f0b105ddec2.zip
-examples/go-service     .builds/examples/go-service/78a79ed651e3d48b7a1a7346b022673e674abb8a.zip    
- 
-
-# push an artifact
-▶ mono push --artifact=.builds/examples/python-service/29d93f3235df9a83f36c471085ba4f0b105ddec2.zip
-ARTIFACT                                                                        STATUS          KEY                                                                     ERROR
-.builds/examples/python-service/29d93f3235df9a83f36c471085ba4f0b105ddec2.zip    successful      /examples/python-service/29d93f3235df9a83f36c471085ba4f0b105ddec2.zip        
-
-# push all built artifacts
-▶ mono push
-ARTIFACT                                                                        STATUS          KEY                                                                     ERROR 
-.builds/examples/go-service/78a79ed651e3d48b7a1a7346b022673e674abb8a.zip        successful      /examples/go-service/78a79ed651e3d48b7a1a7346b022673e674abb8a.zip            
-.builds/examples/python-service/29d93f3235df9a83f36c471085ba4f0b105ddec2.zip    successful      /examples/python-service/29d93f3235df9a83f36c471085ba4f0b105ddec2.zip        
-
-# clean all built artifacts
 ▶ mono build --clean
 
-# nothing to push now
-▶ mono push
+▶ mono build
+SERVICE                	ARTIFACT                                                                     
+examples/go-service    	.builds/examples/go-service/5215256745a800ab8909097d230933f42ebe249f.zip    	
+examples/python-service	.builds/examples/python-service/fc09aaad1dc4cfd8f3165d9f5f9af2f394675664.zip	
 
-▶ mono checksum --service=examples/python-service --pushed
-29d93f3235df9a83f36c471085ba4f0b105ddec2
+▶ mono push
+ARTIFACT                                                                    	STATUS    	KEY                                                                    	ERROR 
+.builds/examples/python-service/fc09aaad1dc4cfd8f3165d9f5f9af2f394675664.zip	successful	examples/python-service/v1.fc09aaad1dc4cfd8f3165d9f5f9af2f394675664.zip	-    	
+.builds/examples/go-service/5215256745a800ab8909097d230933f42ebe249f.zip    	successful	examples/go-service/v1.5215256745a800ab8909097d230933f42ebe249f.zip    	-    	
 
 ▶ mono list
-SERVICE                 STATUS  CHECKSUM                                        LOCAL CHECKSUM                          
-examples/python-service ok      29d93f3235df9a83f36c471085ba4f0b105ddec2        29d93f3235df9a83f36c471085ba4f0b105ddec2
-examples/go-service     ok      78a79ed651e3d48b7a1a7346b022673e674abb8a        78a79ed651e3d48b7a1a7346b022673e674abb8a
+SERVICE                	DIFF 	VERSION	CHECKSUM                                	LOCAL CHECKSUM                           
+examples/go-service    	false	1      	5215256745a800ab8909097d230933f42ebe249f	5215256745a800ab8909097d230933f42ebe249f	
+examples/python-service	false	1      	fc09aaad1dc4cfd8f3165d9f5f9af2f394675664	fc09aaad1dc4cfd8f3165d9f5f9af2f394675664	
+
+▶ echo foo bar > examples/python-service/a-new-file.txt
+
+▶ mono list
+SERVICE                	DIFF 	VERSION	CHECKSUM                                	LOCAL CHECKSUM                           
+examples/python-service	true 	1      	fc09aaad1dc4cfd8f3165d9f5f9af2f394675664	486bff14a41a94c82b37109447398ce1ab225643	
+examples/go-service    	false	1      	5215256745a800ab8909097d230933f42ebe249f	5215256745a800ab8909097d230933f42ebe249f	
+
+▶ mono build --clean
+
+▶ mono build
+SERVICE                	ARTIFACT                                                                     
+examples/python-service	.builds/examples/python-service/486bff14a41a94c82b37109447398ce1ab225643.zip	
+
+▶ mono push
+ARTIFACT                                                                    	STATUS    	KEY                                                                    	ERROR 
+.builds/examples/python-service/486bff14a41a94c82b37109447398ce1ab225643.zip	successful	examples/python-service/v2.486bff14a41a94c82b37109447398ce1ab225643.zip	-    	
+
+▶ mono list
+SERVICE                	DIFF 	VERSION	CHECKSUM                                	LOCAL CHECKSUM                           
+examples/go-service    	false	1      	5215256745a800ab8909097d230933f42ebe249f	5215256745a800ab8909097d230933f42ebe249f	
+examples/python-service	false	2      	486bff14a41a94c82b37109447398ce1ab225643	486bff14a41a94c82b37109447398ce1ab225643	
 
 ```
 
 ## To Do
 
-- enhance `mono list` (prefix, contains, suffix filter)
-- support for unit test
+- enhance `mono list` (prefix/contains filter)
 - support for docker images as artifacts

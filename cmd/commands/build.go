@@ -5,7 +5,8 @@ import (
 
 	"github.com/acciaioli/mono/cmd/display"
 	"github.com/acciaioli/mono/cmd/env"
-	"github.com/acciaioli/mono/services/build"
+	"github.com/acciaioli/mono/internal/common"
+	"github.com/acciaioli/mono/lib"
 )
 
 func Build() *cobra.Command {
@@ -17,10 +18,10 @@ func Build() *cobra.Command {
 		servicesDescription = "relative path to the target service root directory"
 
 		cleanFlag        = "clean"
-		cleanDescription = "cleanup builds directory"
+		cleanDescription = "cleans all built artifacts"
 	)
 
-	var services []string
+	var servicePaths []string
 	var clean bool
 
 	cmd := &cobra.Command{
@@ -28,32 +29,32 @@ func Build() *cobra.Command {
 		Short: commandDescription,
 		RunE: func(cmd2 *cobra.Command, args []string) error {
 			if clean {
-				return build.Clean()
+				return lib.Clean()
 			}
 
-			var artifacts []build.Artifact
-			var err error
+			bucket, err := env.LoadArtifactBucket()
+			if err != nil {
+				return err
+			}
+			bs, err := common.NewBlobStorage(bucket)
+			if err != nil {
+				return err
+			}
 
-			if services == nil {
-				bucket, err := env.LoadArtifactBucket()
-				if err != nil {
-					return err
+			builds, err := func() ([]lib.Build, error) {
+				if servicePaths == nil {
+					return lib.BuildOutdatedServices(bs)
 				}
-				artifacts, err = build.BuildServicesWithDiff(bucket)
-				if err != nil {
-					return err
-				}
-			} else {
-				artifacts, err = build.BuildServices(services)
-				if err != nil {
-					return err
-				}
+				return lib.BuildServices(bs, servicePaths)
+			}()
+			if err != nil {
+				return err
 			}
 
 			headers := []string{"service", "artifact"}
 			var data [][]string
-			for _, artifact := range artifacts {
-				data = append(data, []string{artifact.Service, artifact.Artifact})
+			for _, row := range builds {
+				data = append(data, []string{row.Service.Path, row.ArtifactPath})
 			}
 			display.Table(headers, data)
 
@@ -61,7 +62,7 @@ func Build() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringArrayVar(&services, servicesFlag, nil, servicesDescription)
+	cmd.Flags().StringArrayVar(&servicePaths, servicesFlag, nil, servicesDescription)
 	cmd.Flags().BoolVar(&clean, cleanFlag, false, cleanDescription)
 
 	return cmd

@@ -12,7 +12,7 @@ import (
 
 func main() {
 	if err := execute(); err != nil {
-		display.String(fmt.Sprintf("[error] something went wrong...\n==> %s\n", err.Error()))
+		display.String(fmt.Sprintf("[error] %s", err.Error()))
 		os.Exit(1)
 	}
 }

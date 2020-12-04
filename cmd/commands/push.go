@@ -5,7 +5,8 @@ import (
 
 	"github.com/acciaioli/mono/cmd/display"
 	"github.com/acciaioli/mono/cmd/env"
-	"github.com/acciaioli/mono/services/push"
+	"github.com/acciaioli/mono/internal/common"
+	"github.com/acciaioli/mono/lib"
 )
 
 func Push() *cobra.Command {
@@ -13,44 +14,42 @@ func Push() *cobra.Command {
 		commandUse         = "push"
 		commandDescription = "Pushes a service artifact to the cloud"
 
-		artifactFlag        = "artifact"
-		artifactDescription = "relative path to the artifact to be pushed"
+		artifactsFlag        = "artifact"
+		artifactsDescription = "relative path to the artifact to be pushed. multiple artifacts can be provided"
 	)
 
-	var artifact string
+	var artifacts []string
 
 	cmd := &cobra.Command{
 		Use:   commandUse,
 		Short: commandDescription,
 		RunE: func(cmd2 *cobra.Command, args []string) error {
-			var pushed []push.Pushed
-			var err error
-
 			bucket, err := env.LoadArtifactBucket()
 			if err != nil {
 				return err
 			}
+			bs, err := common.NewBlobStorage(bucket)
+			if err != nil {
+				return err
+			}
 
-			if artifact == "" {
-				pushed, err = push.PushAllArtifacts(bucket)
-				if err != nil {
-					return err
+			pushed, err := func() ([]lib.Pushed, error) {
+				if artifacts == nil {
+					return lib.PushAllArtifacts(bs)
 				}
-			} else {
-				p, err := push.PushArtifact(bucket, artifact)
-				if err != nil {
-					return err
-				}
-				pushed = append(pushed, *p)
+				return lib.PushArtifacts(bs, artifacts), nil
+			}()
+			if err != nil {
+				return err
 			}
 
 			headers := []string{"artifact", "status", "key", "error"}
 			var data [][]string
-			for _, p := range pushed {
-				if p.Err != nil {
-					data = append(data, []string{p.Artifact, string(p.Status), "", p.Err.Error()})
+			for _, row := range pushed {
+				if row.Err != nil {
+					data = append(data, []string{row.Artifact, string(row.Status), "-", row.Err.Error()})
 				}
-				data = append(data, []string{p.Artifact, string(p.Status), *p.Key, ""})
+				data = append(data, []string{row.Artifact, string(row.Status), *row.Key, "-"})
 			}
 			display.Table(headers, data)
 
@@ -58,7 +57,7 @@ func Push() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&artifact, artifactFlag, "", artifactDescription)
+	cmd.Flags().StringArrayVar(&artifacts, artifactsFlag, nil, artifactsDescription)
 
 	return cmd
 }

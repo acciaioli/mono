@@ -1,4 +1,10 @@
 ---
+checksum:
+  exclude:
+    - "README.md"
+    - "docs/"
+    - "*-notes.txt"
+
 build:
   artifact:
     name:  ".my-python.zip"

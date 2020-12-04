@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	ServiceSpecFile = "service.yml"
+	ServiceSpecFile = "mono.yml"
 )
 
 func IsServiceDir(path string) bool {
