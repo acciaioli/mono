@@ -11,16 +11,10 @@ Usage:
 
 Available Commands:
   build       Builds artifact for a service
-  checksum    Computes/Fetches a service checksum
+  checksum    Computes services checksums
   help        Help about any command
   list        Lists all services under the current directory
   push        Pushes a service artifact to the cloud
-
-Flags:
-  -h, --help      help for mono
-  -v, --version   version for mono
-
-Use "mono [command] --help" for more information about a command.
 ```
 
 ## Install
@@ -43,7 +37,6 @@ Use "mono [command] --help" for more information about a command.
 ### mono usage
 
 ```
-
 ▶ mono --version
 mono version snapshot-juan-dc0649b
 
@@ -90,7 +83,6 @@ ARTIFACT                                                                    	STA
 SERVICE                	DIFF 	VERSION	CHECKSUM                                	LOCAL CHECKSUM                           
 examples/go-service    	false	1      	5215256745a800ab8909097d230933f42ebe249f	5215256745a800ab8909097d230933f42ebe249f	
 examples/python-service	false	2      	486bff14a41a94c82b37109447398ce1ab225643	486bff14a41a94c82b37109447398ce1ab225643	
-
 ```
 
 ## To Do
