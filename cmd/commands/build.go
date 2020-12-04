@@ -18,7 +18,7 @@ func Build() *cobra.Command {
 		servicesDescription = "relative path to the target service root directory"
 
 		cleanFlag        = "clean"
-		cleanDescription = "cleanup builds directory"
+		cleanDescription = "cleans all built artifacts"
 	)
 
 	var servicePaths []string

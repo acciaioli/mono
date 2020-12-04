@@ -10,10 +10,10 @@ import (
 func Checksum() *cobra.Command {
 	const (
 		commandUse         = "checksum"
-		commandDescription = "Computes/Fetches a servicePath checksum"
+		commandDescription = "Computes services checksums"
 
 		servicesFlag        = "service"
-		servicesDescription = "relative path to the target servicePath root directory"
+		servicesDescription = "relative path to the target service root directory"
 	)
 
 	var servicePaths []string

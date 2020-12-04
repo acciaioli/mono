@@ -81,7 +81,7 @@ func buildService(state *ServiceState) (*string, error) {
 	}
 
 	artifactBuildPath, err := moveArtifact(
-		state.Service.Path, state.Checksum, *artifactLocalPath,
+		state.Service.Path, state.LocalChecksum, *artifactLocalPath,
 	)
 	if err != nil {
 		return nil, err

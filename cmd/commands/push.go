@@ -15,7 +15,7 @@ func Push() *cobra.Command {
 		commandDescription = "Pushes a service artifact to the cloud"
 
 		artifactsFlag        = "artifact"
-		artifactsDescription = "relative path to the artifact to be pushed"
+		artifactsDescription = "relative path to the artifact to be pushed. multiple artifacts can be provided"
 	)
 
 	var artifacts []string
