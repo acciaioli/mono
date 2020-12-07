@@ -12,10 +12,10 @@ import (
 func Build() *cobra.Command {
 	const (
 		commandUse         = "build"
-		commandDescription = "Builds artifact for a service"
+		commandDescription = "Builds service artifacts"
 
 		servicesFlag        = "service"
-		servicesDescription = "relative path to the target service root directory"
+		servicesDescription = "relative path(s) to the target service root directory"
 
 		cleanFlag        = "clean"
 		cleanDescription = "cleans all built artifacts"

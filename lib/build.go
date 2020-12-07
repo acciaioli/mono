@@ -60,14 +60,15 @@ func Clean() error {
 	return os.RemoveAll(buildsRoot)
 }
 
-func buildServices(states []ServiceState) ([]Build, error) {
+func buildServices(serviceStates []ServiceState) ([]Build, error) {
 	var builds []Build
-	for _, lService := range states {
-		artifactPath, err := buildService(&lService)
+	for _, serviceState := range serviceStates {
+		serviceState := serviceState
+		artifactPath, err := buildService(&serviceState)
 		if err != nil {
 			return nil, err
 		}
-		builds = append(builds, Build{Service: *lService.Service, ArtifactPath: *artifactPath})
+		builds = append(builds, Build{Service: *serviceState.Service, ArtifactPath: *artifactPath})
 	}
 	return builds, nil
 }
