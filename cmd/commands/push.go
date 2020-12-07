@@ -12,13 +12,17 @@ import (
 func Push() *cobra.Command {
 	const (
 		commandUse         = "push"
-		commandDescription = "Pushes a service artifact to the cloud"
+		commandDescription = "Pushes service artifacts to the cloud"
 
 		artifactsFlag        = "artifact"
-		artifactsDescription = "relative path to the artifact to be pushed. multiple artifacts can be provided"
+		artifactsDescription = "relative path to the artifact(s) to be pushed"
+
+		keepArtifactsFlag        = "keep"
+		keepArtifactsDescription = "keep successfully uploaded artifacts"
 	)
 
 	var artifacts []string
+	var keep bool
 
 	cmd := &cobra.Command{
 		Use:   commandUse,
@@ -35,9 +39,9 @@ func Push() *cobra.Command {
 
 			pushed, err := func() ([]lib.Pushed, error) {
 				if artifacts == nil {
-					return lib.PushAllArtifacts(bs)
+					return lib.PushAllArtifacts(bs, keep)
 				}
-				return lib.PushArtifacts(bs, artifacts), nil
+				return lib.PushArtifacts(bs, artifacts, keep), nil
 			}()
 			if err != nil {
 				return err
@@ -58,6 +62,7 @@ func Push() *cobra.Command {
 	}
 
 	cmd.Flags().StringArrayVar(&artifacts, artifactsFlag, nil, artifactsDescription)
+	cmd.Flags().BoolVar(&keep, keepArtifactsFlag, false, keepArtifactsDescription)
 
 	return cmd
 }

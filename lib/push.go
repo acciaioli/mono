@@ -3,6 +3,7 @@ package lib
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -27,7 +28,7 @@ type Pushed struct {
 	Err      error
 }
 
-func PushAllArtifacts(bs common.BlobStorage) ([]Pushed, error) {
+func PushAllArtifacts(bs common.BlobStorage, keep bool) ([]Pushed, error) {
 	var artifacts []string
 
 	_, err := os.Stat(buildsRoot)
@@ -50,10 +51,10 @@ func PushAllArtifacts(bs common.BlobStorage) ([]Pushed, error) {
 		return nil, err
 	}
 
-	return PushArtifacts(bs, artifacts), nil
+	return PushArtifacts(bs, artifacts, keep), nil
 }
 
-func PushArtifacts(bs common.BlobStorage, artifacts []string) []Pushed {
+func PushArtifacts(bs common.BlobStorage, artifacts []string, keep bool) []Pushed {
 	pushedErrChan := make(chan Pushed, len(artifacts))
 	wg := sync.WaitGroup{}
 
@@ -62,7 +63,7 @@ func PushArtifacts(bs common.BlobStorage, artifacts []string) []Pushed {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			key, err := pushArtifact(bs, artifact)
+			key, err := pushArtifact(bs, artifact, keep)
 			if err != nil {
 				pushedErrChan <- Pushed{Artifact: artifact, Status: StatusFailed, Err: err}
 				return
@@ -81,7 +82,7 @@ func PushArtifacts(bs common.BlobStorage, artifacts []string) []Pushed {
 	return pushed
 }
 
-func pushArtifact(bs common.BlobStorage, artifact string) (*string, error) {
+func pushArtifact(bs common.BlobStorage, artifact string, keep bool) (*string, error) {
 	if artifact == "" {
 		return nil, errors.New("artifact cannot be empty")
 	}
@@ -123,6 +124,12 @@ func pushArtifact(bs common.BlobStorage, artifact string) (*string, error) {
 	err = bs.Put(newKey, body)
 	if err != nil {
 		return nil, err
+	}
+	if !keep {
+		err := os.Remove(artifact)
+		if err != nil {
+			log.Printf("failed to delete artifact %s (%s)\n", artifact, err.Error())
+		}
 	}
 
 	return &newKey, nil

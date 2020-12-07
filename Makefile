@@ -27,7 +27,7 @@ empty-dev-bucket:
 
 LOCAL_INSTALL_VERSION=snapshot-$(USER)-$(shell git rev-parse --short HEAD)
 
-install:
+install: default
 	@ echo ">> installing cli (dev)"
 	@ go install -ldflags "-X main.version=$(LOCAL_INSTALL_VERSION)" ./cmd/mono
 	@ echo ">> done"

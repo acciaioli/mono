@@ -23,6 +23,7 @@ func ComputeChecksums(servicePaths []string) ([]Checksum, error) {
 
 	var checksums []Checksum
 	for _, service := range services {
+		service := service
 		checksum, err := computeChecksum(service.Path, service.Spec.Checksum.Exclude)
 		if err != nil {
 			return nil, err
